@@ -13,6 +13,7 @@ import requests
 import urllib.parse
 import json
 from supabase import create_client, Client
+import uuid
 
 app = FastAPI()
 app.add_middleware(
@@ -429,13 +430,20 @@ def load_fallback_menu():
 
 def save_menu(flat_menu):
     print("[LOG] save_menu called. Menu length:", len(flat_menu))
+    # Ensure all IDs are UUIDs (string)
+    for item in flat_menu:
+        try:
+            uuid.UUID(str(item["id"]))
+        except Exception:
+            # Not a valid UUID, generate a new one
+            item["id"] = str(uuid.uuid4())
     # Save the flat menu as JSON (admin source of truth)
     with open(MENU_JSON_PATH, "w", encoding="utf-8") as f:
         json.dump(flat_menu, f, ensure_ascii=False, indent=2)
     # Also save to Supabase
     try:
         print("[LOG] Attempting to clear existing menu in Supabase...")
-        del_resp = supabase.from_('menu').delete().gt('id', 0).execute()
+        del_resp = supabase.from_('menu').delete().execute()
         print("[LOG] Supabase delete response:", del_resp)
         print("[LOG] Attempting to upsert new menu to Supabase...")
         upsert_resp = supabase.from_('menu').upsert(flat_menu).execute()
