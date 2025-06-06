@@ -443,7 +443,7 @@ def save_menu(flat_menu):
     # Also save to Supabase
     try:
         print("[LOG] Attempting to clear existing menu in Supabase...")
-        del_resp = supabase.from_('menu').delete().execute()
+        del_resp = supabase.from_('menu').delete().neq('id', '').execute()
         print("[LOG] Supabase delete response:", del_resp)
         print("[LOG] Attempting to upsert new menu to Supabase...")
         upsert_resp = supabase.from_('menu').upsert(flat_menu).execute()
