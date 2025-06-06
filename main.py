@@ -89,8 +89,8 @@ class MenuItem(BaseModel):
     price: float | None = None
     sizes: list = []
     image: str = ""
-    extraOptions: list = []
-    pizzaSubcategory: str = ""
+    extraoptions: list = []
+    pizzasubcategory: str = ""
     category: str = ""
 
 # --- Helper: get image url for a food item using local img/ folder or fallback to Unsplash ---
@@ -493,7 +493,6 @@ def flatten_menu(menu):
     flat = []
     for group in menu:
         items = group.get("items", [])
-        # Pizza section: items is a list of subgroups
         if items and isinstance(items[0], dict) and "subcategory" in items[0] and "items" in items[0]:
             for subgroup in items:
                 for item in subgroup.get("items", []):
