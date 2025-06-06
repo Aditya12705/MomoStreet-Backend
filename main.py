@@ -17,14 +17,9 @@ from supabase import create_client, Client
 app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "https://momostreet.netlify.app",
-        "http://localhost:3000",
-        "http://localhost:5173"
-    ],  # Only allow Netlify and local dev origins
+    allow_origins=["*"],
     allow_methods=["*"],
     allow_headers=["*"],
-    allow_credentials=True,  # Allow credentials for secure cross-origin requests
 )
 
 app.mount("/img", StaticFiles(directory=os.path.join(os.path.dirname(__file__), "img")), name="img")
@@ -87,9 +82,15 @@ class Order(BaseModel):
     phone: str
 
 class MenuItem(BaseModel):
-    id: int
+    id: str
     name: str
-    price: float
+    extras: str = ""
+    price: float | None = None
+    sizes: list = []
+    image: str = ""
+    extraOptions: list = []
+    pizzaSubcategory: str = ""
+    category: str = ""
 
 # --- Helper: get image url for a food item using local img/ folder or fallback to Unsplash ---
 def get_food_image_url(item_name):
@@ -186,19 +187,28 @@ def load_menu():
     try:
         response = supabase.from_('menu').select('*').execute()
         if response.data:
-
             # Assuming the data from Supabase is already in the desired flat format
             # and image URLs are correctly set in Supabase
             return group_menu(response.data)
         else:
             print("No data found in Supabase 'menu' table. Falling back to local files.")
     except Exception as e:
-        pass  # Added to fix 'expected indented block' error
+        print(f"Error loading menu from Supabase: {e}")
+        print("Falling back to local files.")
+
 
     # 2. If menu.json exists, load from it (admin-edited, flat)
     if os.path.exists(MENU_JSON_PATH):
         with open(MENU_JSON_PATH, encoding="utf-8") as f:
             flat = json.load(f)
+        # Before returning, try to save this local menu to Supabase if Supabase is empty
+        try:
+            response = supabase.from_('menu').select('id').limit(1).execute()
+            if not response.data:
+                print("Supabase 'menu' table is empty. Uploading local menu.json to Supabase.")
+                supabase.from_('menu').upsert(flat).execute()
+        except Exception as e:
+            print(f"Error checking/uploading to Supabase: {e}")
         return group_menu(flat)
     # Try to load from Excel first
     if os.path.exists(MENU_XLSX_PATH):
@@ -421,6 +431,14 @@ def save_menu(flat_menu):
     # Save the flat menu as JSON (admin source of truth)
     with open(MENU_JSON_PATH, "w", encoding="utf-8") as f:
         json.dump(flat_menu, f, ensure_ascii=False, indent=2)
+    # Also save to Supabase
+    try:
+        # Clear existing data and insert new data
+        supabase.from_('menu').delete().gt('id', 0).execute()
+        supabase.from_('menu').upsert(flat_menu).execute()
+        print("Menu successfully saved to Supabase.")
+    except Exception as e:
+        print(f"Error saving menu to Supabase: {e}")
     # Optionally, also save to CSV for backup (not used for loading anymore)
     # with open(MENU_PATH, "w", newline='', encoding='utf-8') as f:
     #     writer = csv.DictWriter(f, fieldnames=["id", "name", "price", "image"])
@@ -521,7 +539,7 @@ async def upload_image(file: UploadFile = File(...)):
     file_path = os.path.join(img_folder, filename)
     with open(file_path, "wb") as f:
         f.write(await file.read())
-    url = f"https://momostreet-backend-pfgd.onrender.com/img/{urllib.parse.quote(filename)}"
+    url = f"https://momostreet-backend.onrender.com/img/{urllib.parse.quote(filename)}"
     return {"url": url}
 
 @app.post("/order")
@@ -593,7 +611,3 @@ def export_menu():
 @app.get("/")
 def health_check():
     return JSONResponse(content={"status": "OK"}, status_code=200)
-
-@app.head("/")
-def health_check_head():
-    return JSONResponse(content=None, status_code=200)
