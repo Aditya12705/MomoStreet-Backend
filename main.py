@@ -17,7 +17,10 @@ from supabase import create_client, Client
 app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "https://momostreet.netlify.app",  # Production frontend
+        "http://localhost:5173",           # Local dev (optional)
+    ],
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -181,14 +184,14 @@ def load_menu():
     try:
         response = supabase.from_('menu').select('*').execute()
         if response.data:
-            print(f"Loaded menu from Supabase. SUPABASE_URL: {SUPABASE_URL}, SUPABASE_ANON_KEY: {'*' * len(SUPABASE_ANON_KEY) if SUPABASE_ANON_KEY else 'None'}")
+
             # Assuming the data from Supabase is already in the desired flat format
             # and image URLs are correctly set in Supabase
             return group_menu(response.data)
         else:
             print("No data found in Supabase 'menu' table. Falling back to local files.")
     except Exception as e:
-        print(f"Error loading menu from Supabase: {e}. SUPABASE_URL: {SUPABASE_URL}, SUPABASE_ANON_KEY: {'*' * len(SUPABASE_ANON_KEY) if SUPABASE_ANON_KEY else 'None'}. Falling back to local files.")
+        pass  # Added to fix 'expected indented block' error
 
     # 2. If menu.json exists, load from it (admin-edited, flat)
     if os.path.exists(MENU_JSON_PATH):
