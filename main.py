@@ -430,19 +430,32 @@ def load_fallback_menu():
 
 def save_menu(flat_menu):
     print("[LOG] save_menu called. Menu length:", len(flat_menu))
-    # Ensure all IDs are valid UUIDs (string)
+    # Ensure all IDs are valid UUIDs (string) and all keys are present
+    required_keys = [
+        "id", "name", "extras", "price", "sizes", "image", "extraOptions", "pizzaSubcategory", "category"
+    ]
     sanitized_menu = []
     for item in flat_menu:
+        # Ensure valid UUID
         try:
-            # If id is missing or empty, generate a new UUID
             if not item.get("id") or str(item["id"]).strip() == "":
                 item["id"] = str(uuid.uuid4())
             uuid.UUID(str(item["id"]))
-            sanitized_menu.append(item)
         except Exception:
-            # If id is invalid, generate a new one
             item["id"] = str(uuid.uuid4())
-            sanitized_menu.append(item)
+        # Ensure all required keys are present
+        for key in required_keys:
+            if key not in item:
+                # Set sensible defaults
+                if key == "sizes":
+                    item[key] = []
+                elif key == "extraOptions":
+                    item[key] = []
+                elif key == "price":
+                    item[key] = None
+                else:
+                    item[key] = ""
+        sanitized_menu.append(item)
     # Save the flat menu as JSON (admin source of truth)
     with open(MENU_JSON_PATH, "w", encoding="utf-8") as f:
         json.dump(sanitized_menu, f, ensure_ascii=False, indent=2)
