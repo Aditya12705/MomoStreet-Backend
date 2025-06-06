@@ -430,23 +430,30 @@ def load_fallback_menu():
 
 def save_menu(flat_menu):
     print("[LOG] save_menu called. Menu length:", len(flat_menu))
-    # Ensure all IDs are UUIDs (string)
+    # Ensure all IDs are valid UUIDs (string)
+    sanitized_menu = []
     for item in flat_menu:
         try:
+            # If id is missing or empty, generate a new UUID
+            if not item.get("id") or str(item["id"]).strip() == "":
+                item["id"] = str(uuid.uuid4())
             uuid.UUID(str(item["id"]))
+            sanitized_menu.append(item)
         except Exception:
-            # Not a valid UUID, generate a new one
+            # If id is invalid, generate a new one
             item["id"] = str(uuid.uuid4())
+            sanitized_menu.append(item)
     # Save the flat menu as JSON (admin source of truth)
     with open(MENU_JSON_PATH, "w", encoding="utf-8") as f:
-        json.dump(flat_menu, f, ensure_ascii=False, indent=2)
+        json.dump(sanitized_menu, f, ensure_ascii=False, indent=2)
     # Also save to Supabase
     try:
         print("[LOG] Attempting to clear existing menu in Supabase...")
-        del_resp = supabase.from_('menu').delete().neq('id', '').execute()
+        dummy_uuid = str(uuid.uuid4())
+        del_resp = supabase.from_('menu').delete().neq('id', dummy_uuid).execute()
         print("[LOG] Supabase delete response:", del_resp)
         print("[LOG] Attempting to upsert new menu to Supabase...")
-        upsert_resp = supabase.from_('menu').upsert(flat_menu).execute()
+        upsert_resp = supabase.from_('menu').upsert(sanitized_menu).execute()
         print("[LOG] Supabase upsert response:", upsert_resp)
         print("Menu successfully saved to Supabase.")
     except Exception as e:
