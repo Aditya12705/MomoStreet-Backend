@@ -161,7 +161,7 @@ def group_menu(flat_menu):
     pizza_subgroups = defaultdict(list)  # pizzaSubcategory -> [items]
     for item in flat_menu:
         cat = item.get("category", "Menu")
-        pizza_subcat = item.get("pizzaSubcategory", "")
+        pizza_subcat = item.get("pizzasubcategory", "")
         # Group pizza items only if category is PIZZA and has sizes
         if cat and cat.upper() == "PIZZA" and item.get("sizes") and len(item["sizes"]) > 0:
             pizza_subgroups[pizza_subcat or "Other"].append(item)
@@ -340,7 +340,7 @@ def load_menu():
                             "extras": extras if extras and extras.lower() != "nan" else "",
                             "sizes": options,
                             "image": get_food_image_url(name),
-                            "extraOptions": parse_extra_options(extras)
+                            "extraoptions": parse_extra_options(extras)
                         })
                         print(f"DEBUG: Added pizza item '{name}' with sizes: {options}")
                         item_id += 1
@@ -361,7 +361,7 @@ def load_menu():
                             "extras": extras if extras and extras.lower() != "nan" else "",
                             "price": price_val,
                             "image": get_food_image_url(name),
-                            "extraOptions": parse_extra_options(extras)
+                            "extraoptions": parse_extra_options(extras)
                         })
                         print(f"DEBUG: Added non-pizza item '{name}' with price: {price_val}")
                         item_id += 1
@@ -416,7 +416,7 @@ def load_fallback_menu():
                             "name": row["name"],
                             "price": float(row["price"]),
                             "image": image,
-                            "extraOptions": parse_extra_options(row.get("extras", ""))
+                            "extraoptions": parse_extra_options(row.get("extras", ""))
                         })
                     except Exception:
                         continue
@@ -432,7 +432,7 @@ def save_menu(flat_menu):
     print("[LOG] save_menu called. Menu length:", len(flat_menu))
     # Ensure all IDs are valid UUIDs (string) and all keys are present
     required_keys = [
-        "id", "name", "extras", "price", "sizes", "image", "extraOptions", "pizzaSubcategory", "category"
+        "id", "name", "extras", "price", "sizes", "image", "extraoptions", "pizzasubcategory", "category"
     ]
     sanitized_menu = []
     for item in flat_menu:
@@ -449,7 +449,7 @@ def save_menu(flat_menu):
                 # Set sensible defaults
                 if key == "sizes":
                     item[key] = []
-                elif key == "extraOptions":
+                elif key == "extraoptions":
                     item[key] = []
                 elif key == "price":
                     item[key] = None
@@ -499,8 +499,8 @@ def flatten_menu(menu):
                         "price": None,  # Pizza items use sizes, not price
                         "sizes": item.get("sizes", []),
                         "image": item.get("image", ""),
-                        "extraOptions": item.get("extraOptions", []),
-                        "pizzaSubcategory": subgroup.get("subcategory", ""),
+                        "extraoptions": item.get("extraoptions", []),
+                        "pizzasubcategory": subgroup.get("subcategory", ""),
                         "category": group.get("subcategory", ""),
                     })
         else:
@@ -512,8 +512,8 @@ def flatten_menu(menu):
                     "price": item.get("price"),
                     "sizes": item.get("sizes", []),
                     "image": item.get("image", ""),
-                    "extraOptions": item.get("extraOptions", []),
-                    "pizzaSubcategory": "",
+                    "extraoptions": item.get("extraoptions", []),
+                    "pizzasubcategory": "",
                     "category": group.get("subcategory", ""),
                 })
     return flat
@@ -635,7 +635,7 @@ def update_menu(menu: list[dict]):
 def export_menu():
     """
     Export the current menu as a flat JSON array for admin editing.
-    Each item includes all fields: id, name, extras, price, sizes, image, extraOptions, pizzaSubcategory, category.
+    Each item includes all fields: id, name, extras, price, sizes, image, extraoptions, pizzasubcategory, category.
     """
     menu = load_menu()
     flat = flatten_menu(menu)
