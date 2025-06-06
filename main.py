@@ -211,7 +211,7 @@ def load_menu():
             print(f"Error checking/uploading to Supabase: {e}")
         return group_menu(flat)
     # Try to load from Excel first
-    if os.path.exists(MENU_XLSX_PATH):
+    if os.pathexists(MENU_XLSX_PATH):
         try:
             df = pd.read_excel(MENU_XLSX_PATH, header=None)
             menu = []
@@ -428,14 +428,18 @@ def load_fallback_menu():
     return [{"subcategory": "Menu", "items": menu}]
 
 def save_menu(flat_menu):
+    print("[LOG] save_menu called. Menu length:", len(flat_menu))
     # Save the flat menu as JSON (admin source of truth)
     with open(MENU_JSON_PATH, "w", encoding="utf-8") as f:
         json.dump(flat_menu, f, ensure_ascii=False, indent=2)
     # Also save to Supabase
     try:
-        # Clear existing data and insert new data
-        supabase.from_('menu').delete().gt('id', 0).execute()
-        supabase.from_('menu').upsert(flat_menu).execute()
+        print("[LOG] Attempting to clear existing menu in Supabase...")
+        del_resp = supabase.from_('menu').delete().gt('id', 0).execute()
+        print("[LOG] Supabase delete response:", del_resp)
+        print("[LOG] Attempting to upsert new menu to Supabase...")
+        upsert_resp = supabase.from_('menu').upsert(flat_menu).execute()
+        print("[LOG] Supabase upsert response:", upsert_resp)
         print("Menu successfully saved to Supabase.")
     except Exception as e:
         print(f"Error saving menu to Supabase: {e}")
@@ -594,6 +598,7 @@ def get_order_history():
 
 @app.post("/admin/menu")
 def update_menu(menu: list[dict]):
+    print("[LOG] /admin/menu endpoint called. Menu received:", menu)
     # Save the menu as provided (including admin-updated images)
     save_menu(menu)
     return {"status": "menu updated"}
