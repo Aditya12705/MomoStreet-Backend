@@ -18,11 +18,13 @@ app = FastAPI()
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "https://momostreet.netlify.app",  # Production frontend
-        "http://localhost:5173",           # Local dev (optional)
-    ],
+        "https://momostreet.netlify.app",
+        "http://localhost:3000",
+        "http://localhost:5173"
+    ],  # Only allow Netlify and local dev origins
     allow_methods=["*"],
     allow_headers=["*"],
+    allow_credentials=True,  # Allow credentials for secure cross-origin requests
 )
 
 app.mount("/img", StaticFiles(directory=os.path.join(os.path.dirname(__file__), "img")), name="img")
@@ -519,7 +521,7 @@ async def upload_image(file: UploadFile = File(...)):
     file_path = os.path.join(img_folder, filename)
     with open(file_path, "wb") as f:
         f.write(await file.read())
-    url = f"https://momostreet-backend.onrender.com/img/{urllib.parse.quote(filename)}"
+    url = f"https://momostreet-backend-pfgd.onrender.com/img/{urllib.parse.quote(filename)}"
     return {"url": url}
 
 @app.post("/order")
