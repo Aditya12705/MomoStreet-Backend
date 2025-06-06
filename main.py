@@ -593,3 +593,7 @@ def export_menu():
 @app.get("/")
 def health_check():
     return JSONResponse(content={"status": "OK"}, status_code=200)
+
+@app.head("/")
+def health_check_head():
+    return JSONResponse(content=None, status_code=200)
