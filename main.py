@@ -181,14 +181,14 @@ def load_menu():
     try:
         response = supabase.from_('menu').select('*').execute()
         if response.data:
-            print("Loaded menu from Supabase.")
+            print(f"Loaded menu from Supabase. SUPABASE_URL: {SUPABASE_URL}, SUPABASE_ANON_KEY: {'*' * len(SUPABASE_ANON_KEY) if SUPABASE_ANON_KEY else 'None'}")
             # Assuming the data from Supabase is already in the desired flat format
             # and image URLs are correctly set in Supabase
             return group_menu(response.data)
         else:
             print("No data found in Supabase 'menu' table. Falling back to local files.")
     except Exception as e:
-        print(f"Error loading menu from Supabase: {e}. Falling back to local files.")
+        print(f"Error loading menu from Supabase: {e}. SUPABASE_URL: {SUPABASE_URL}, SUPABASE_ANON_KEY: {'*' * len(SUPABASE_ANON_KEY) if SUPABASE_ANON_KEY else 'None'}. Falling back to local files.")
 
     # 2. If menu.json exists, load from it (admin-edited, flat)
     if os.path.exists(MENU_JSON_PATH):
