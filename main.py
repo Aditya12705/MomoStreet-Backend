@@ -443,7 +443,7 @@ def save_menu(flat_menu):
             uuid.UUID(str(item["id"]))
         except Exception:
             item["id"] = str(uuid.uuid4())
-        # Ensure all required keys are present
+        # Ensure all required keys are present and lowercase
         for key in required_keys:
             if key not in item:
                 # Set sensible defaults
@@ -455,6 +455,11 @@ def save_menu(flat_menu):
                     item[key] = None
                 else:
                     item[key] = ""
+        # Remove any camelCase keys if present
+        if "extraOptions" in item:
+            del item["extraOptions"]
+        if "pizzaSubcategory" in item:
+            del item["pizzaSubcategory"]
         sanitized_menu.append(item)
     # Save the flat menu as JSON (admin source of truth)
     with open(MENU_JSON_PATH, "w", encoding="utf-8") as f:
