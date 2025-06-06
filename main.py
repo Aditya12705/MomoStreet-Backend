@@ -116,7 +116,7 @@ def get_food_image_url(item_name):
                 if norm_file == expected:
                     print(f"Matched image for '{item_name}': {orig_file}")
                     found = True
-                    return f"https://momostreet-backend-pfgd.onrender.com/img/{urllib.parse.quote(orig_file)}"
+                    return f"{IMAGE_SERVING_URL}/img/{urllib.parse.quote(orig_file)}"
     if not found:
         print(f"No local image found for '{item_name}', using Supabase storage fallback.")
         # Construct Supabase storage URL for the image
